@@ -1,0 +1,71 @@
+name: Pulizia vecchie release EasyRT
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cleanup-releases
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Elimina release oltre tre mesi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            let latestId;
+            try {
+              const latest = await github.rest.repos.getLatestRelease({
+                owner, repo
+              });
+              latestId = latest.data.id;
+            } catch (error) {
+              if (error.status === 404) {
+                core.info('Nessuna release stabile: nessuna cancellazione.');
+                return;
+              }
+              throw error;
+            }
+
+            const now = new Date();
+            const cutoff = new Date(Date.UTC(
+              now.getUTCFullYear(),
+              now.getUTCMonth() - 3,
+              1,
+              now.getUTCHours(),
+              now.getUTCMinutes(),
+              now.getUTCSeconds()
+            ));
+            const lastDay = new Date(Date.UTC(
+              cutoff.getUTCFullYear(),
+              cutoff.getUTCMonth() + 1,
+              0
+            )).getUTCDate();
+            cutoff.setUTCDate(Math.min(now.getUTCDate(), lastDay));
+
+            const releases = await github.paginate(
+              github.rest.repos.listReleases,
+              { owner, repo, per_page: 100 }
+            );
+
+            for (const release of releases) {
+              if (release.id === latestId || release.draft) continue;
+              if (!release.published_at) continue;
+              if (new Date(release.published_at) >= cutoff) continue;
+
+              await github.rest.repos.deleteRelease({
+                owner,
+                repo,
+                release_id: release.id
+              });
+              core.info('Eliminata release: ' + release.tag_name);
+            }
