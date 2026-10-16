@@ -1,0 +1,9 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const {newer,digestFor,official,check}=require('./app-updater.cjs');
+const current=require('./package.json').version;
+const parts=current.split('.').map(Number);
+const next=parts.slice(0,2).concat(parts[2]+1).join('.');
+test('accetta solo revisioni stabili più recenti',()=>{assert(newer('v'+next));assert(!newer('v'+current));assert(!newer('v0.0.0'));assert(!newer('v'+next+'-rc.1'));assert(!newer('invalid'));});
+test('checksum esatto del file e solo cifre esadecimali',()=>{const good='a'.repeat(64);assert.equal(digestFor(good+'  setup.exe\n','setup.exe'),good);assert.throws(()=>digestFor('z'.repeat(64)+'  setup.exe','setup.exe'));assert.throws(()=>digestFor(good+'  other.exe','setup.exe'));});
+test('download confinati alle release del repository ufficiale',()=>{assert(official('https://github.com/EasysistemRB/EasyRT-Releases/releases/download/v0.1.33/setup.exe'));for(const u of ['http://github.com/EasysistemRB/EasyRT-Releases/releases/download/x/a','https://github.com.evil.test/EasysistemRB/EasyRT-Releases/releases/download/x/a','https://github.com/other/repo/releases/download/x/a','https://user:pass@github.com/EasysistemRB/EasyRT-Releases/releases/download/x/a'])assert(!official(u));});
+test('latest senza release è gestito; prerelease e draft non installate',async()=>{const original=global.fetch;try{global.fetch=async()=>({status:404});assert.equal((await check()).available,false);for(const flags of [{prerelease:true},{draft:true}]){global.fetch=async()=>({status:200,ok:true,json:async()=>({tag_name:'v'+next,...flags})});assert.equal((await check()).available,false);}global.fetch=async()=>({status:200,ok:true,json:async()=>({tag_name:'v'+next,prerelease:false,draft:false})});assert.equal((await check()).available,true);}finally{global.fetch=original;}});
