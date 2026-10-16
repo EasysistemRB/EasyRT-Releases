@@ -22,7 +22,7 @@ async function main(){
    }
    await page.locator('#tab-0').click();await page.locator('#host').fill('192.168.1.138');await page.locator('#save').click();await page.waitForFunction(()=>document.getElementById('state').textContent.includes('Configurazione salvata sul PC'));await page.reload();await page.waitForFunction(()=>document.getElementById('host').value==='192.168.1.138');assert.equal(await page.locator('#host').inputValue(),'192.168.1.138');
    await page.locator('#scanopen').click();assert(await page.locator('#networkdialog').isVisible());await page.locator('#scanclose').click();
-   await page.locator('#tab-1').click();await page.locator('#amount').fill('1.25');await page.locator('#simulate').click();await page.locator('#receiptpreview').waitFor({state:'visible'});
+   await page.locator('#tab-1').click();await page.locator('#amount').fill('1.25');assert.deepEqual(errors,[]);const previewResponse=page.waitForResponse(r=>r.url().endsWith('/api')&&r.request().postDataJSON()?.op==='receipt_preview');await page.locator('#simulate').click();const preview=await previewResponse;const previewData=await preview.json();assert.equal(preview.status(),200,JSON.stringify(previewData));assert.equal(previewData.simulation,true,JSON.stringify(previewData));await page.waitForFunction(()=>!document.getElementById('simulate').disabled);assert(await page.locator('#receiptpreview').isVisible(),(await page.locator('#state').textContent())+' '+JSON.stringify(errors));
    assert.match(await page.locator('#receiptresult').textContent(),/Simulazione/);
    assert.deepEqual(errors,[]);assert.deepEqual(badAssets,[]);await page.close();
   }
