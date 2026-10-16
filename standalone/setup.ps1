@@ -47,6 +47,8 @@ function Install-EasyRT {
    if(Test-Path (Join-Path $target 'EasyRT.exe')){
     $listing=Get-Content (Join-Path $payload 'app-files.json') -Raw|ConvertFrom-Json
     foreach($entry in $listing){Verify-File (Join-Path $target $entry.path) $entry.sha256}
+    $runtimeListing=Get-Content (Join-Path $payload 'runtime-files.json') -Raw|ConvertFrom-Json
+    foreach($entry in $runtimeListing){Verify-File (Join-Path $target $entry.path) $entry.sha256}
    } else {
     New-Item -ItemType Directory -Path $stage|Out-Null
     $previous=$null;$pointer=Join-Path $root 'current.json'
@@ -79,6 +81,10 @@ function Install-EasyRT {
     $app=Join-Path $payload 'app.zip';Verify-File $app $manifest.appSha256
     [IO.Compression.ZipFile]::ExtractToDirectory($app,$stage)
     if(!(Test-Path (Join-Path $stage 'EasyRT.exe'))){throw 'Motore applicativo mancante'}
+    foreach($listName in @('app-files.json','runtime-files.json')){
+     $entries=Get-Content (Join-Path $payload $listName) -Raw|ConvertFrom-Json
+     foreach($entry in $entries){Verify-File (Join-Path $stage $entry.path) $entry.sha256}
+    }
     if(Test-Path $target){throw 'Cartella della revisione occupata: riprovare dopo averla verificata'}
     Move-Item -LiteralPath $stage -Destination $target
    }

@@ -66,6 +66,8 @@ jobs:
           if(!$line){throw 'Checksum Electron assente'}
           $expected=($line -split '\s+')[0]
           if((Get-FileHash electron.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected){throw 'Checksum Electron errato'}
+      - name: Test validazione build
+        run: python -m unittest discover -s release -p 'test_*.py'
       - name: Compila setup leggero e completo
         shell: pwsh
         run: python release/build.py --runtime electron.zip --tag $env:RELEASE_TAG

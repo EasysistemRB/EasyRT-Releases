@@ -69,7 +69,7 @@ def build(runtime,tag,compile_go=True):
  complete=dict(core);complete.update(app)
  complete['LEGGIMI.txt']=(ROOT/'INSTALLAZIONE.md').read_bytes()
  archive(OUT/f'EasyRT_Windows_{VERSION}.zip',complete)
- source={str(p.relative_to(ROOT)):p.read_bytes()for p in ROOT.rglob('*')if p.is_file()and not any(x in {'dist','.git','node_modules','__pycache__'}for x in p.relative_to(ROOT).parts)and str(p.relative_to(ROOT)) not in {v['path'] for v in vendors}and p.name!='payload.zip'and not p.name.endswith('.pyc')}
+ source={str(p.relative_to(ROOT)):p.read_bytes()for p in ROOT.rglob('*')if p.is_file()and not any(x in {'dist','.git','node_modules','__pycache__','qa'}for x in p.relative_to(ROOT).parts)and str(p.relative_to(ROOT)) not in {v['path'] for v in vendors}and p.name not in {'payload.zip','electron.zip','electron-checksums.txt'}and not p.name.endswith('.pyc')}
  archive(OUT/f'EasyRT_Sorgenti_{VERSION}.zip',source)
  (OUT/'SHA256SUMS.txt').write_text(''.join(sha(p.read_bytes())+'  '+p.name+'\n'for p in sorted(OUT.iterdir())if p.is_file()and p.name!='SHA256SUMS.txt'))
  print(json.dumps({p.name:p.stat().st_size for p in OUT.iterdir()if p.is_file()},indent=2))
