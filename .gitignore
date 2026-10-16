@@ -1,0 +1,15 @@
+dist/
+node_modules/
+standalone/payload.zip
+__pycache__/
+*.pyc
+diagnostica.jsonl
+custom4u-credentials.dpapi
+easy-settings.json
+easy-settings.json.tmp
+
+/resources/tools/Advanced_IP_Scanner_2.5.4594.1.exe
+
+qa/
+electron.zip
+electron-checksums.txt

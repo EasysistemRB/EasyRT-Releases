@@ -1,0 +1,1 @@
+const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('machinePanel',{rx:()=>ipcRenderer.send('easy-rx-configurator'),open:(host,port,page)=>ipcRenderer.send('easy-machine-web',{host,port,page})});

@@ -1,0 +1,108 @@
+name: EasyRT · verifica e setup
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: easyrt-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test protocollo e aggiornamenti
+        run: node --test resources/app/test*.cjs
+      - name: Installa browser di collaudo
+        run: |
+          npm install --no-save playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Verifica interfaccia su quattro dimensioni
+        run: node release/test-ui.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anteprime-interfaccia
+          path: qa/*.png
+  build:
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.0'
+      - name: Controlla PowerShell e versioni
+        shell: pwsh
+        run: |
+          $errors=$null; $tokens=$null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'standalone/setup.ps1'),[ref]$tokens,[ref]$errors)
+          if($errors.Count){$errors | Format-List; throw 'Errori sintattici PowerShell'}
+          $version=(Get-Content version -Raw).Trim()
+          $package=Get-Content resources/app/package.json -Raw | ConvertFrom-Json
+          if($package.version -ne $version){throw 'Versioni non coerenti'}
+          if('${{ github.ref_type }}' -eq 'tag'){
+            if('${{ github.ref_name }}' -ne "v$version"){throw 'Tag e versione non coerenti'}
+            "RELEASE_TAG=v$version" >> $env:GITHUB_ENV
+          }else{"RELEASE_TAG=v$version-rc.${{ github.run_number }}" >> $env:GITHUB_ENV}
+      - name: Scarica e verifica Electron ufficiale
+        shell: pwsh
+        run: |
+          $v=(Get-Content electron-version -Raw).Trim()
+          $name="electron-v$v-win32-x64.zip"
+          Invoke-WebRequest "https://github.com/electron/electron/releases/download/v$v/$name" -OutFile electron.zip
+          Invoke-WebRequest "https://github.com/electron/electron/releases/download/v$v/SHASUMS256.txt" -OutFile electron-checksums.txt
+          $line=Get-Content electron-checksums.txt | Where-Object {$_ -match "\s+$([regex]::Escape($name))$"}
+          if(!$line){throw 'Checksum Electron assente'}
+          $expected=($line -split '\s+')[0]
+          if((Get-FileHash electron.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected){throw 'Checksum Electron errato'}
+      - name: Test validazione build
+        run: python -m unittest discover -s release -p 'test_*.py'
+      - name: Compila setup leggero e completo
+        shell: pwsh
+        run: python release/build.py --runtime electron.zip --tag $env:RELEASE_TAG
+      - name: Verifica integrità degli artefatti
+        shell: pwsh
+        run: |
+          python release/verify-build.py
+          $v=(Get-Content version -Raw).Trim()
+          "## Dimensioni pacchetti" >> $env:GITHUB_STEP_SUMMARY
+          Get-ChildItem dist | ForEach-Object { "- $($_.Name): $([math]::Round($_.Length/1MB,2)) MiB" >> $env:GITHUB_STEP_SUMMARY }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: setup-windows
+          path: dist/*
+  publish:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: setup-windows
+          path: dist
+      - name: Pubblica revisione verificata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(cat version | tr -d '\r\n')
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            TAG="$GITHUB_REF_NAME"
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "EasyRT $VERSION" --notes-file CHANGELOG.md
+          else
+            TAG="v$VERSION-rc.$GITHUB_RUN_NUMBER"
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "EasyRT $VERSION · collaudo" --notes "Controlli automatici superati. Setup leggero, completo e ZIP portatile. Non firmato; collaudo su PC Windows e registratore reale necessario prima della release stabile. Gli aggiornamenti automatici ignorano questa versione."
+          fi

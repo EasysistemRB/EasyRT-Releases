@@ -1,0 +1,8 @@
+(()=>{
+ const paths={save:'M5 3h12l4 4v14H3V3h2M7 3v6h10V3M7 21v-8h10v8',scan:'M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16m6-2 6 6',read:'M20 7a9 9 0 1 0 1 9M20 2v6h-6',stop:'M5 5h14v14H5z',connection:'M8 4h8v6H8zM12 10v5M4 15h16M4 15v5m8-5v5m8-5v5',operations:'M5 3h14v18H5zM8 7h8M8 11h8M8 15h4',journal:'M5 3h14v18l-4-2-3 2-3-2-4 2zM8 7h8M8 11h8',program:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2',portal:'M3 4h18v16H3zM3 8h18M7 6h.01M10 6h.01M10 12l4 2-4 2z',technical:'m14 6 4-4a6 6 0 0 1-7 8L3 18l3 3 8-8a6 6 0 0 1 8-7l-4 4z',info:'M12 10v7m0-10h.01M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20',action:'m9 5 7 7-7 7'};
+ function icon(key){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.setAttribute('width','20');svg.setAttribute('height','20');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.classList.add('button-icon');const p=document.createElementNS(svg.namespaceURI,'path');p.setAttribute('d',paths[key]||paths.action);svg.append(p);return svg;}
+ const navKeys=['connection','operations','journal','program','portal','technical','info'];
+ document.querySelectorAll('nav button').forEach((b,i)=>b.prepend(icon(navKeys[i])));
+ const keys={save:'save',scanopen:'scan',read:'read',stop:'stop',scanstart:'scan',scanstop:'stop',scanclose:'stop',detailrefresh:'read',export:'save',headerread:'read',headerwrite:'save',verification:'technical'};
+ document.querySelectorAll('main button,dialog button').forEach(b=>{if(b.closest('nav')||b.querySelector('svg,img,.ico')||b.id.startsWith('pad'))return;b.prepend(icon(keys[b.id]||'action'));});
+})();

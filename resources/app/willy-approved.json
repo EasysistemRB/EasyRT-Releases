@@ -1,0 +1,20 @@
+{
+  "approved": true,
+  "approved_date": "2026-10-08",
+  "character": "Willy",
+  "asset": "willy-expressions.png",
+  "sha256": "34421fc882f1d4010e191830be5b0f2f9742adb3bccb50ccbd5ecbf980ee2331",
+  "expressions": [
+    "stupore",
+    "pensieroso",
+    "risposta trovata"
+  ],
+  "constraints": [
+    "CUSTOM sul berretto",
+    "Easy Sistem sul petto",
+    "Pollice sotto il mento e indice lungo il mento nella posa pensierosa",
+    "Sorriso e indicazione del risultato nella posa risposta trovata",
+    "Non modificare personaggio, colori, loghi o pose senza nuova richiesta"
+  ],
+  "implementation": "Asset approvato invariato. Movimenti CSS di ricerca, stupore e risposta, con rispetto di prefers-reduced-motion."
+}

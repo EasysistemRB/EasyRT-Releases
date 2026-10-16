@@ -1,0 +1,21 @@
+[
+  {
+    "path": "resources/tools/Advanced_IP_Scanner_2.5.4594.1.exe",
+    "size": 21050672,
+    "sha256": "26d5748ffe6bd95e3fee6ce184d388a1a681006dc23a0f08d53c083c593c193b",
+    "parts": [
+      {
+        "path": "resources/tools/Advanced_IP_Scanner_2.5.4594.1.exe.part001",
+        "sha256": "53345a129133e2834c52955836fe110b1bca8c663fdb9b12a999c258c942d7f2"
+      },
+      {
+        "path": "resources/tools/Advanced_IP_Scanner_2.5.4594.1.exe.part002",
+        "sha256": "5c9ca7cb561ebe09ede8a0cb7bcd6a7996b4cbac29e124c2e8543e3044807c3c"
+      },
+      {
+        "path": "resources/tools/Advanced_IP_Scanner_2.5.4594.1.exe.part003",
+        "sha256": "5511809a64f02a378b20b12af9c141441fa7d4fb075a07542012335f26f958aa"
+      }
+    ]
+  }
+]

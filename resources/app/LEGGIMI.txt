@@ -1,0 +1,3 @@
+Easy RT Utility 0.1.33 — applicazione desktop Windows.
+Consultare INSTALLAZIONE.md del pacchetto completo.
+Le operazioni fiscali richiedono conferma e verifica di modello e firmware.

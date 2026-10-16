@@ -1,0 +1,1 @@
+const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('easyRT',{info:()=>ipcRenderer.send('easy-info'),home:()=>ipcRenderer.send('easy-home'),back:()=>ipcRenderer.send('easy-back'),portal:()=>ipcRenderer.send('easy-portal'),updates:()=>ipcRenderer.send('easy-updates'),close:()=>ipcRenderer.send('easy-close')});
